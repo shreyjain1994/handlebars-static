@@ -11,9 +11,22 @@ module.exports = function (url, options) {
     var manifest = options.manifest;
     var silenceManifestErrors = options.silenceManifestErrors;
 
-    //default value
+    //default values
     if (silenceManifestErrors === undefined) {
         silenceManifestErrors = false;
+    }
+
+    //type checking
+    //better to type check now and raise errors, since this will happen as soon as the helper is added to handlebars
+    //if we don't type check now, errors will only be obvious when handlebar templates are actually compiled
+    if (typeof url !== 'string' || !(url instanceof String)) {
+        throw new Error('url must be a string.');
+    }
+    if (typeof silenceManifestErrors !== 'boolean') {
+        throw new Error('options.silenceManifestErrors must be a boolean.');
+    }
+    if (manifest === null || typeof manifest !== 'object') {
+        throw new Error('options.manifest must be an object.')
     }
 
     var useManifest = !!manifest;
@@ -29,7 +42,7 @@ module.exports = function (url, options) {
 
         if (useManifest) {
             link = manifest[link];
-            if (!link && !silenceManifestErrors){
+            if (!link && !silenceManifestErrors) {
                 throw new Error('Link for ' + staticAsset + ' could not be found in the manifest.');
             }
         }

@@ -1,5 +1,10 @@
 "use strict";
 
+var is = require('is');
+var isPlainObject = require('is-plain-object');
+is.plainObject = isPlainObject;
+var merge = require('merge');
+
 /**
  * @param {string} url - The URL that will be attached to the front of all links to static resources.
  * @param {object} [options]
@@ -9,29 +14,34 @@
  */
 module.exports = function (url, options) {
 
-    options = options || {};
-    var manifest = options.manifest;
-    var silenceManifestErrors = options.silenceManifestErrors;
-
-    //default values
-    if (silenceManifestErrors === undefined) {
-        silenceManifestErrors = false;
-    }
+    var defaults = {
+        silenceManifestErrors: false
+    };
 
     //type checking
-    //better to type check now and raise errors, since this will happen as soon as the helper is added to handlebars
-    //if we don't type check now, errors will only be obvious when handlebar templates are actually compiled
-    if (typeof url !== 'string' && !(url instanceof String)) {
-        throw new Error('url must be a string.');
-    }
-    if (typeof silenceManifestErrors !== 'boolean') {
-        throw new Error('options.silenceManifestErrors must be a boolean.');
-    }
-    if (manifest !== undefined && (manifest === null || typeof manifest !== 'object')) {
-        throw new Error('options.manifest must be an object.')
+    if (!is.string(url)) throw new TypeError('url must be a string');
+    if (is.defined(options) && !is.plainObject(options)) throw new TypeError('options must be a plain object');
+
+    //merge default options
+    options = options || {};
+    options = merge({}, defaults, options);
+
+    //type check options
+    if (!is.bool(options.silenceManifestErrors)) throw new TypeError('options.silenceManifestErrors must be a boolean');
+    if (is.defined(options.manifest) && !is.plainObject(options.manifest)) throw new TypeError('options.manifest must be a plain object');
+    if (is.defined(options.manifest)) {
+        for (var key in options.manifest) {
+            if (options.manifest.hasOwnProperty(key)) {
+                if (!is.string(key) || !is.string(options.manifest[key])) {
+                    throw new TypeError('options.manifest must have all keys and values of type string')
+                }
+            }
+        }
     }
 
-    var useManifest = !!manifest;
+    var manifest = options.manifest;
+    var silenceManifestErrors = options.silenceManifestErrors;
+    var useManifest = is.defined(manifest);
 
     //add trailing slash
     url = url.charAt(url.length - 1) === '/' ? url : url + '/';
@@ -39,19 +49,32 @@ module.exports = function (url, options) {
     return function (staticAsset) {
 
         //saved to a new variable so that if using the manifest results in an error,
-        //the exception will be able to indicate the staticAsset that caused problems
+        //the exception will be able to indicate the original parameter that caused problems
         var link = staticAsset;
 
+        //remove leading slash
+        if (link.charAt(0) === '/')
+            link = link.slice(1);
+
         if (useManifest) {
-            link = manifest[link];
-            if (!link && !silenceManifestErrors) {
-                throw new Error('Link for ' + staticAsset + ' could not be found in the manifest.');
+
+            //checking both versions with and without leading slash
+            link = manifest[link] || manifest[staticAsset];
+
+            if (!link) {
+                if (!silenceManifestErrors) {
+                    throw new Error('Link for ' + staticAsset + ' could not be found in the manifest.');
+                }
+                else {
+                    link = staticAsset; //fallback to using original parameter
+                }
             }
+
+            //manifest result may have leading slash
+            if (link.charAt(0) === '/')
+                link = link.slice(1);
         }
 
-        if (link.charAt(0) === '/')
-            return url + link.slice(1);
-        else
-            return url + link;
+        return url + link;
     }
 };

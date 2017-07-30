@@ -4,11 +4,6 @@ var expect = chai.expect;
 var assert = chai.assert;
 var format = require('util').format;
 
-var manifest = {
-    'foo.css': 'foo-123.css',
-    'bar.css': 'bar-456.css'
-};
-
 function noop() {
 }
 
@@ -110,12 +105,59 @@ it('works when given url with trailing slash', function (done) {
     done();
 });
 
-it('works with a manifest', function (done) {
-    var s = handlebarsStatic('example.com/static/', {manifest: manifest});
+it('works with url with trailing slash and with a manifest with keys that have a leading slash', function (done) {
+    var s = handlebarsStatic('example.com/static/', {manifest: {'/foo.css':'foo-123.css'}});
     assert.strictEqual(s('foo.css'), 'example.com/static/foo-123.css');
     assert.strictEqual(s('/foo.css'), 'example.com/static/foo-123.css');
-    assert.strictEqual(s('bar.css'), 'example.com/static/bar-456.css');
-    assert.strictEqual(s('/bar.css'), 'example.com/static/bar-456.css');
+    done();
+});
+
+it('works with url with trailing slash and with a manifest with values that have a leading slash', function (done) {
+    var s = handlebarsStatic('example.com/static/', {manifest: {'foo.css':'/foo-123.css'}});
+    assert.strictEqual(s('foo.css'), 'example.com/static/foo-123.css');
+    assert.strictEqual(s('/foo.css'), 'example.com/static/foo-123.css');
+    done();
+});
+
+it('works with url with trailing slash and with a manifest with values and keys that have a leading slash', function (done) {
+    var s = handlebarsStatic('example.com/static/', {manifest: {'/foo.css':'/foo-123.css'}});
+    assert.strictEqual(s('foo.css'), 'example.com/static/foo-123.css');
+    assert.strictEqual(s('/foo.css'), 'example.com/static/foo-123.css');
+    done();
+});
+
+it('works with url with trailing slash and with a manifest with values and keys without a leading slash', function (done) {
+    var s = handlebarsStatic('example.com/static/', {manifest: {'foo.css':'foo-123.css'}});
+    assert.strictEqual(s('foo.css'), 'example.com/static/foo-123.css');
+    assert.strictEqual(s('/foo.css'), 'example.com/static/foo-123.css');
+    done();
+});
+
+it('works with url without trailing slash and with a manifest with keys that have a leading slash', function (done) {
+    var s = handlebarsStatic('example.com/static', {manifest: {'/foo.css':'foo-123.css'}});
+    assert.strictEqual(s('foo.css'), 'example.com/static/foo-123.css');
+    assert.strictEqual(s('/foo.css'), 'example.com/static/foo-123.css');
+    done();
+});
+
+it('works with url without trailing slash and with a manifest with values that have a leading slash', function (done) {
+    var s = handlebarsStatic('example.com/static', {manifest: {'foo.css':'/foo-123.css'}});
+    assert.strictEqual(s('foo.css'), 'example.com/static/foo-123.css');
+    assert.strictEqual(s('/foo.css'), 'example.com/static/foo-123.css');
+    done();
+});
+
+it('works with url without trailing slash and with a manifest with keys and values that have a leading slash', function (done) {
+    var s = handlebarsStatic('example.com/static', {manifest: {'/foo.css':'/foo-123.css'}});
+    assert.strictEqual(s('foo.css'), 'example.com/static/foo-123.css');
+    assert.strictEqual(s('/foo.css'), 'example.com/static/foo-123.css');
+    done();
+});
+
+it('works with url without trailing slash and with a manifest with keys and values without a leading slash', function (done) {
+    var s = handlebarsStatic('example.com/static', {manifest: {'foo.css':'foo-123.css'}});
+    assert.strictEqual(s('foo.css'), 'example.com/static/foo-123.css');
+    assert.strictEqual(s('/foo.css'), 'example.com/static/foo-123.css');
     done();
 });
 

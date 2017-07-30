@@ -58,8 +58,8 @@ module.exports = function (url, options) {
 
         if (useManifest) {
 
-            //checking both versions with and without leading slash
-            link = manifest[link] || manifest[staticAsset];
+            //checking original and then both versions with and without leading slash
+            link = manifest[staticAsset] || manifest[link] || manifest['/' + link];
 
             if (!link) {
                 if (!silenceManifestErrors) {
